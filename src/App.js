@@ -9,7 +9,21 @@ import ToDoForm from "./ToDoForm";
 import "./App.css";
 
 function App() {
-  const [toDoList, setToDoList] = useState(data);
+  const saveToDoList = (data) => {
+    localStorage.setItem("toDoList", JSON.stringify(data));
+  };
+
+  const loadToDoList = () => {
+    let toDoList = data;
+    let lsToDoList = localStorage.getItem("toDoList");
+    if (lsToDoList !== null) {
+      toDoList = JSON.parse(lsToDoList);
+    }
+    saveToDoList(toDoList);
+    return toDoList;
+  };
+
+  const [toDoList, setToDoList] = useState(loadToDoList());
 
   const handleToggle = (id) => {
     let mapped = toDoList.map((task) => {
@@ -17,6 +31,7 @@ function App() {
         ? { ...task, complete: !task.complete }
         : { ...task };
     });
+    saveToDoList(mapped);
     setToDoList(mapped);
   };
 
@@ -33,6 +48,7 @@ function App() {
       ...copy,
       { id: toDoList.length + 1, task: userInput, complete: false },
     ];
+    saveToDoList(copy);
     setToDoList(copy);
   };
 

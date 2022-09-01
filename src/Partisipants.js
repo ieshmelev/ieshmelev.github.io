@@ -16,24 +16,18 @@ import {
 import Box from "@mui/material/Box";
 import Title from "./Title";
 
-function createData(id, name, bucket, team) {
-  return { id, name, bucket, team };
-}
-
-const initialRows = [
-  createData(0, "Elvis Presley", 5, "Paris Saint-Germain"),
-  createData(1, "Paul McCartney", 5, "Liverpool"),
-  createData(2, "Tom Scholz", 5, "Manchester City"),
-  createData(3, "Michael Jackson", 5, "Bayern München"),
-  createData(4, "Bruce Springsteen", 5, "Real Madrid"),
-];
-
 function EditToolbar(props) {
-  const { setRows, setRowModesModel } = props;
+  const { setRows, setRowModesModel, ballot } = props;
 
-  const handleClick = () => {
-    const id = 5;
-    setRows((oldRows) => [...oldRows, { id, name: "", age: "", isNew: true }]);
+  const handleAddClick = () => {
+    let id = 0;
+    setRows((oldRows) => {
+      oldRows.forEach((item) => {
+        id = item.id > id ? item.id : id;
+      });
+      id++;
+      return [...oldRows, { id, name: "", team: "", isNew: true }];
+    });
     setRowModesModel((oldModel) => ({
       ...oldModel,
       [id]: { mode: GridRowModes.Edit, fieldToFocus: "name" },
@@ -42,10 +36,10 @@ function EditToolbar(props) {
 
   return (
     <GridToolbarContainer>
-      <Button color="primary" startIcon={<AddIcon />} onClick={handleClick}>
-        Add record
+      <Button color="primary" startIcon={<AddIcon />} onClick={handleAddClick}>
+        Add
       </Button>
-      <Button color="primary" startIcon={<CasinoIcon />} onClick={handleClick}>
+      <Button color="primary" startIcon={<CasinoIcon />} onClick={ballot}>
         Ballot
       </Button>
     </GridToolbarContainer>
@@ -55,10 +49,24 @@ function EditToolbar(props) {
 EditToolbar.propTypes = {
   setRowModesModel: PropTypes.func.isRequired,
   setRows: PropTypes.func.isRequired,
+  ballot: PropTypes.func.isRequired,
 };
 
-const Partisipants = () => {
-  const [rows, setRows] = React.useState(initialRows);
+const Partisipants = ({ buckets }) => {
+  const savePartisipants = (data) => {
+    localStorage.setItem("foo", JSON.stringify(data));
+  };
+
+  const loadPartisipants = () => {
+    let partisipants = [];
+    let lsPartisipants = localStorage.getItem("foo");
+    if (lsPartisipants !== null) {
+      partisipants = JSON.parse(lsPartisipants);
+    }
+    return partisipants;
+  };
+
+  const [rows, setRows] = React.useState(loadPartisipants());
   const [rowModesModel, setRowModesModel] = React.useState({});
 
   const handleRowEditStart = (params, event) => {
@@ -78,7 +86,9 @@ const Partisipants = () => {
   };
 
   const handleDeleteClick = (id) => () => {
-    setRows(rows.filter((row) => row.id !== id));
+    const trows = rows.filter((row) => row.id !== id);
+    savePartisipants(trows);
+    setRows(trows);
   };
 
   const handleCancelClick = (id) => () => {
@@ -95,8 +105,14 @@ const Partisipants = () => {
 
   const processRowUpdate = (newRow) => {
     const updatedRow = { ...newRow, isNew: false };
-    setRows(rows.map((row) => (row.id === newRow.id ? updatedRow : row)));
+    const trows = rows.map((row) => (row.id === newRow.id ? updatedRow : row));
+    savePartisipants(trows);
+    setRows(trows);
     return updatedRow;
+  };
+
+  const ballot = () => {
+    // todo ballot
   };
 
   const columns = [
@@ -107,7 +123,10 @@ const Partisipants = () => {
       type: "singleSelect",
       editable: true,
       flex: 1,
-      valueOptions: [1, 2, 3, 4, 5],
+      valueOptions: [...buckets].map((item) => {
+        const [key] = item;
+        return key;
+      }),
     },
     { field: "team", headerName: "Team", flex: 1 },
     {
@@ -182,7 +201,7 @@ const Partisipants = () => {
             Toolbar: EditToolbar,
           }}
           componentsProps={{
-            toolbar: { setRows, setRowModesModel },
+            toolbar: { setRows, setRowModesModel, ballot },
           }}
           experimentalFeatures={{ newEditingApi: true }}
         />

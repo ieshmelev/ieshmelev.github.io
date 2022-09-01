@@ -111,8 +111,31 @@ const Partisipants = ({ buckets }) => {
     return updatedRow;
   };
 
+  const suffle = (data) =>
+    data
+      .map((value) => ({ value, sort: Math.random() }))
+      .sort((a, b) => a.sort - b.sort)
+      .map(({ value }) => value);
+
+  const rand = (min, max) => {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min)) + min;
+  };
+
   const ballot = () => {
-    // todo ballot
+    let used = [];
+    let shRows = suffle(rows);
+
+    shRows.forEach((row) => {
+      let teams = buckets
+        .get(row.bucket)
+        .teams.filter((team) => !used.includes(team.id));
+      let shTeams = suffle(teams);
+      let team = shTeams[rand(0, shTeams.length)];
+      processRowUpdate({ ...row, team: team.title });
+      used.push(team.id);
+    });
   };
 
   const columns = [

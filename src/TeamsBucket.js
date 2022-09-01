@@ -1,39 +1,25 @@
 import * as React from "react";
-import Paper from "@mui/material/Paper";
-import Stack from "@mui/material/Stack";
-import { styled } from "@mui/material/styles";
 import Title from "./Title";
-
-const Item = styled(Paper)(({ theme }) => ({
-  ...theme.typography.body2,
-  padding: theme.spacing(1),
-  textAlign: "center",
-}));
+import Box from "@mui/material/Box";
+import Grid from "@mui/material/Grid";
 
 const TeamsBucket = () => {
   return (
     <React.Fragment>
       <Title>Bucket</Title>
-      <Stack direction="row" spacing={2}>
-        <Item>Item 1</Item>
-        <Item>Item 2</Item>
-        <Item>Item 3</Item>
-        <Item>Item 1</Item>
-        <Item>Item 2</Item>
-        <Item>Item 3</Item>
-        <Item>Item 1</Item>
-        <Item>Item 2</Item>
-        <Item>Item 3</Item>
-        <Item>Item 1</Item>
-        <Item>Item 2</Item>
-        <Item>Item 3</Item>
-        <Item>Item 1</Item>
-        <Item>Item 2</Item>
-        <Item>Item 3</Item>
-        <Item>Item 1</Item>
-        <Item>Item 2</Item>
-        <Item>Item 3</Item>
-      </Stack>
+      <Box sx={{ flexGrow: 1 }}>
+        <Grid container columns={{ xs: 4, sm: 8, md: 12 }}>
+          {Array.from(Array(7)).map((_, index) => (
+            <Grid item xs={2} sm={2} md={2} key={index}>
+              <img
+                src={`https://fifastatic.fifaindex.com/FIFA22/teams/dark/73.png`}
+                alt={"alt"}
+                loading="lazy"
+              />
+            </Grid>
+          ))}
+        </Grid>
+      </Box>
     </React.Fragment>
   );
 };

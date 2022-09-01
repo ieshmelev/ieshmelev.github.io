@@ -130,7 +130,13 @@ const Partisipants = ({ buckets }) => {
 
     const trows = suffle(rows).map((trow) => {
       const teams = suffle(
-        buckets.get(trow.bucket).teams.filter((team) => !used.includes(team.id))
+        trow.buckets
+          .split(",")
+          .reduce(
+            (sum, current) => [...sum, ...buckets.get(Number(current)).teams],
+            []
+          )
+          .filter((team) => !used.includes(team.id))
       );
       const team = teams[rand(0, teams.length)];
       used.push(team.id);
@@ -150,15 +156,10 @@ const Partisipants = ({ buckets }) => {
   const columns = [
     { field: "name", headerName: "Name", editable: true, flex: 1 },
     {
-      field: "bucket",
-      headerName: "Bucket",
-      type: "singleSelect",
+      field: "buckets",
+      headerName: "Buckets",
       editable: true,
       flex: 1,
-      valueOptions: [...buckets].map((item) => {
-        const [key] = item;
-        return key;
-      }),
     },
     { field: "team", headerName: "Team", flex: 1 },
     {

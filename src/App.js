@@ -29,7 +29,7 @@ function App() {
               noWrap
               sx={{ flexGrow: 1 }}
             >
-              Randomizer
+              Ballot
             </Typography>
           </Toolbar>
         </MuiAppBar>

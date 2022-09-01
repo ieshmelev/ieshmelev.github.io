@@ -85,11 +85,8 @@ const Partisipants = ({ buckets }) => {
     setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } });
   };
 
-  const handleDeleteClick = (id) => () => {
-    const trows = rows.filter((row) => row.id !== id);
-    savePartisipants(trows);
-    setRows(trows);
-  };
+  const handleDeleteClick = (id) => () =>
+    processRowsUpdate(rows.filter((row) => row.id !== id));
 
   const handleCancelClick = (id) => () => {
     setRowModesModel({
@@ -105,10 +102,15 @@ const Partisipants = ({ buckets }) => {
 
   const processRowUpdate = (newRow) => {
     const updatedRow = { ...newRow, isNew: false };
-    const trows = rows.map((row) => (row.id === newRow.id ? updatedRow : row));
-    savePartisipants(trows);
-    setRows(trows);
+    processRowsUpdate(
+      rows.map((row) => (row.id === newRow.id ? updatedRow : row))
+    );
     return updatedRow;
+  };
+
+  const processRowsUpdate = (rows) => {
+    savePartisipants(rows);
+    setRows(rows);
   };
 
   const suffle = (data) =>
@@ -125,17 +127,24 @@ const Partisipants = ({ buckets }) => {
 
   const ballot = () => {
     let used = [];
-    let shRows = suffle(rows);
 
-    shRows.forEach((row) => {
-      let teams = buckets
-        .get(row.bucket)
-        .teams.filter((team) => !used.includes(team.id));
-      let shTeams = suffle(teams);
-      let team = shTeams[rand(0, shTeams.length)];
-      processRowUpdate({ ...row, team: team.title });
+    const trows = suffle(rows).map((trow) => {
+      const teams = suffle(
+        buckets.get(trow.bucket).teams.filter((team) => !used.includes(team.id))
+      );
+      const team = teams[rand(0, teams.length)];
       used.push(team.id);
+      return { ...trow, team: team.title };
     });
+
+    processRowsUpdate(
+      rows.map((row) => {
+        return {
+          ...row,
+          ...trows.find((trow) => row.id === trow.id),
+        };
+      })
+    );
   };
 
   const columns = [

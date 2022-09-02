@@ -12,8 +12,11 @@ import {
   DataGrid,
   GridToolbarContainer,
   GridActionsCellItem,
+  useGridApiContext,
 } from "@mui/x-data-grid";
 import Box from "@mui/material/Box";
+import MenuItem from "@mui/material/MenuItem";
+import Select from "@mui/material/Select";
 import Title from "./Title";
 
 function EditToolbar(props) {
@@ -26,7 +29,7 @@ function EditToolbar(props) {
         id = item.id > id ? item.id : id;
       });
       id++;
-      return [...oldRows, { id, name: "", team: "", isNew: true }];
+      return [...oldRows, { id, name: "", buckets: "", team: "", isNew: true }];
     });
     setRowModesModel((oldModel) => ({
       ...oldModel,
@@ -51,6 +54,35 @@ EditToolbar.propTypes = {
   setRows: PropTypes.func.isRequired,
   draw: PropTypes.func.isRequired,
 };
+
+function MultiSelectEditComponent(props) {
+  const { id, value, field, buckets } = props;
+  const apiRef = useGridApiContext();
+  const handleChange = (event) => {
+    const {
+      target: { value },
+    } = event;
+    apiRef.current.setEditCellValue({ id, field, value: value.join() });
+  };
+
+  return (
+    <Select
+      multiple
+      value={value.split(",").filter((item) => item !== "")}
+      onChange={handleChange}
+      sx={{ width: 1 }}
+    >
+      {[...buckets].map((bucket) => {
+        const [key] = bucket;
+        return (
+          <MenuItem key={key.toString()} value={key.toString()}>
+            {key.toString()}
+          </MenuItem>
+        );
+      })}
+    </Select>
+  );
+}
 
 const Partisipants = ({ buckets }) => {
   const savePartisipants = (data) => {
@@ -133,14 +165,25 @@ const Partisipants = ({ buckets }) => {
         trow.buckets
           .split(",")
           .reduce(
-            (sum, current) => [...sum, ...buckets.get(Number(current)).teams],
+            (sum, current) =>
+              buckets.has(Number(current))
+                ? [...sum, ...buckets.get(Number(current)).teams]
+                : sum,
             []
           )
           .filter((team) => !used.includes(team.id))
       );
-      const team = teams[rand(0, teams.length)];
-      used.push(team.id);
-      return { ...trow, team: team.title };
+      console.log(`draw for: ${trow.name}`);
+      console.log("teams:", teams);
+      if (teams.length === 0) {
+        return trow;
+      }
+      const r = rand(0, teams.length);
+      console.log(`draw: ${r}`);
+      console.log("team:", teams[r]);
+      console.log("");
+      used.push(teams[r].id);
+      return { ...trow, team: teams[r].title };
     });
 
     processRowsUpdate(
@@ -159,6 +202,9 @@ const Partisipants = ({ buckets }) => {
       field: "buckets",
       headerName: "Buckets",
       editable: true,
+      renderEditCell: (params) => (
+        <MultiSelectEditComponent {...params} buckets={buckets} />
+      ),
       flex: 1,
     },
     { field: "team", headerName: "Team", flex: 1 },

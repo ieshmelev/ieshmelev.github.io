@@ -176,6 +176,7 @@ const Partisipants = ({ buckets }) => {
       console.log(`draw for: ${trow.name}`);
       console.log("teams:", teams);
       if (teams.length === 0) {
+        console.log("");
         return trow;
       }
       const r = rand(0, teams.length);

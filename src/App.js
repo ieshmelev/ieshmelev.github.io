@@ -45,7 +45,7 @@ function App() {
               noWrap
               sx={{ flexGrow: 1 }}
             >
-              Ballot
+              Draw
             </Typography>
           </Toolbar>
         </MuiAppBar>

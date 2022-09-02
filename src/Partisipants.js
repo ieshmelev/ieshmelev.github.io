@@ -17,7 +17,7 @@ import Box from "@mui/material/Box";
 import Title from "./Title";
 
 function EditToolbar(props) {
-  const { setRows, setRowModesModel, ballot } = props;
+  const { setRows, setRowModesModel, draw } = props;
 
   const handleAddClick = () => {
     let id = 0;
@@ -39,8 +39,8 @@ function EditToolbar(props) {
       <Button color="primary" startIcon={<AddIcon />} onClick={handleAddClick}>
         Add
       </Button>
-      <Button color="primary" startIcon={<CasinoIcon />} onClick={ballot}>
-        Ballot
+      <Button color="primary" startIcon={<CasinoIcon />} onClick={draw}>
+        Draw
       </Button>
     </GridToolbarContainer>
   );
@@ -49,7 +49,7 @@ function EditToolbar(props) {
 EditToolbar.propTypes = {
   setRowModesModel: PropTypes.func.isRequired,
   setRows: PropTypes.func.isRequired,
-  ballot: PropTypes.func.isRequired,
+  draw: PropTypes.func.isRequired,
 };
 
 const Partisipants = ({ buckets }) => {
@@ -125,7 +125,7 @@ const Partisipants = ({ buckets }) => {
     return Math.floor(Math.random() * (max - min)) + min;
   };
 
-  const ballot = () => {
+  const draw = () => {
     let used = [];
 
     const trows = suffle(rows).map((trow) => {
@@ -234,7 +234,7 @@ const Partisipants = ({ buckets }) => {
             Toolbar: EditToolbar,
           }}
           componentsProps={{
-            toolbar: { setRows, setRowModesModel, ballot },
+            toolbar: { setRows, setRowModesModel, draw },
           }}
           experimentalFeatures={{ newEditingApi: true }}
         />

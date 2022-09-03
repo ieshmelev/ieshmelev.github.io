@@ -91,7 +91,9 @@ MultiSelectEditComponent.propTypes = {
   buckets: PropTypes.any.isRequired
 }
 
-const Partisipants = ({ buckets }) => {
+const Partisipants = (props) => {
+  const { buckets } = props
+
   const savePartisipants = (data) => {
     localStorage.setItem('partisipants', JSON.stringify(data))
   }

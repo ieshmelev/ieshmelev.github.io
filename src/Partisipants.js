@@ -86,12 +86,12 @@ function MultiSelectEditComponent(props) {
 
 const Partisipants = ({ buckets }) => {
   const savePartisipants = (data) => {
-    localStorage.setItem("foo", JSON.stringify(data));
+    localStorage.setItem("partisipants", JSON.stringify(data));
   };
 
   const loadPartisipants = () => {
     let partisipants = [];
-    let lsPartisipants = localStorage.getItem("foo");
+    let lsPartisipants = localStorage.getItem("partisipants");
     if (lsPartisipants !== null) {
       partisipants = JSON.parse(lsPartisipants);
     }

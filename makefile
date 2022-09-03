@@ -1,5 +1,6 @@
 lint:
 	golangci-lint run
+	npm run lint
 
 test:
 	go test -v ./...

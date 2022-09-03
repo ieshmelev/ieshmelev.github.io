@@ -1,9 +1,10 @@
-import * as React from "react";
-import Title from "./Title";
-import Box from "@mui/material/Box";
-import Grid from "@mui/material/Grid";
-import "./Bucket.css";
-import Rating from "@mui/material/Rating";
+import * as React from 'react'
+import Title from './Title'
+import Box from '@mui/material/Box'
+import Grid from '@mui/material/Grid'
+import './Bucket.css'
+import Rating from '@mui/material/Rating'
+import PropTypes from 'prop-types'
 
 const Bucket = ({ bucket }) => {
   return (
@@ -40,7 +41,11 @@ const Bucket = ({ bucket }) => {
         </Grid>
       </Box>
     </React.Fragment>
-  );
-};
+  )
+}
 
-export default Bucket;
+Bucket.propTypes = {
+  bucket: PropTypes.object.isRequired
+}
+
+export default Bucket

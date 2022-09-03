@@ -24,6 +24,7 @@ var (
 	outLogos    string
 	pathLogos   string
 	srcUrl      *url.URL
+	foo         = ""
 )
 
 type team struct {

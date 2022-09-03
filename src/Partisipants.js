@@ -173,7 +173,7 @@ const Partisipants = ({ buckets }) => {
           .split(',')
           .reduce(
             (sum, current) =>
-              buckets instanceof Map && buckets.has(Number(current))
+              buckets.has(Number(current))
                 ? [...sum, ...buckets.get(Number(current)).teams]
                 : sum,
             []

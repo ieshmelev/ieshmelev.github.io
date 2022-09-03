@@ -6,7 +6,9 @@ import './Bucket.css'
 import Rating from '@mui/material/Rating'
 import PropTypes from 'prop-types'
 
-const Bucket = ({ bucket }) => {
+const Bucket = (props) => {
+  const { bucket } = props
+
   return (
     <React.Fragment>
       <Title>

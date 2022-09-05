@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -26,9 +27,9 @@ var (
 	errNotFound          = errors.New("not found")
 	fNotFound            = "not_found.png"
 	downloadWorkersCount = runtime.NumCPU()
-	outData              string
-	outLogos             string
-	pathLogos            string
+	outData              *string
+	outLogos             *string
+	pathLogos            *string
 	srcUrl               *url.URL
 )
 
@@ -41,31 +42,33 @@ type team struct {
 }
 
 func main() {
-	outData = os.Getenv("OUT_DATA")
-	if outData == "" {
-		log.Println("OUT_DATA is required")
+	outData = flag.String("out_data", "", "")
+	outLogos = flag.String("out_logos", "", "")
+	pathLogos = flag.String("path_logos", "", "")
+	src := flag.String("src", "", "")
+	flag.Parse()
+
+	if outData == nil {
+		log.Println("out_data is required")
 		return
 	}
 
-	outLogos = os.Getenv("OUT_LOGOS")
-	if outLogos == "" {
-		log.Println("OUT_LOGOS is required")
+	if outLogos == nil {
+		log.Println("out_logos is required")
 		return
 	}
 
-	pathLogos = os.Getenv("PATH_LOGOS")
-	if outLogos == "" {
-		log.Println("PATH_LOGOS is required")
+	if pathLogos == nil {
+		log.Println("path_logos is required")
 		return
 	}
 
-	src := os.Getenv("SRC")
-	if src == "" {
-		log.Println("SRC is required")
+	if src == nil {
+		log.Println("src is required")
 		return
 	}
 	var err error
-	srcUrl, err = url.Parse(src)
+	srcUrl, err = url.Parse(*src)
 	if err != nil {
 		log.Println("parse url error", err)
 	}
@@ -88,7 +91,7 @@ func main() {
 		return
 	}
 
-	if err := os.WriteFile(outData, b, perm); err != nil {
+	if err := os.WriteFile(*outData, b, perm); err != nil {
 		log.Println("write error", err)
 		return
 	}
@@ -172,7 +175,7 @@ func downloadLogos(teams []team) ([]team, error) {
 		return nil
 	})
 
-	fNotFound := path.Join(pathLogos, fNotFound)
+	fNotFound := path.Join(*pathLogos, fNotFound)
 	processed := make(chan team)
 	for w := 0; w < downloadWorkersCount; w++ {
 		g.Go(func() error {
@@ -198,11 +201,11 @@ func downloadLogos(teams []team) ([]team, error) {
 					}
 
 					_, f := path.Split(u.Path)
-					if err := os.WriteFile(path.Join(outLogos, f), b, perm); err != nil {
+					if err := os.WriteFile(path.Join(*outLogos, f), b, perm); err != nil {
 						return fmt.Errorf("save logo %s error: %w", t.Img, err)
 					}
 
-					t.Img = path.Join(pathLogos, f)
+					t.Img = path.Join(*pathLogos, f)
 					processed <- t
 
 				case <-ctx.Done():

@@ -2,8 +2,10 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -11,19 +13,24 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"runtime"
+	"sort"
+	"sync"
 
 	"github.com/PuerkitoBio/goquery"
+	"golang.org/x/sync/errgroup"
 )
 
 const perm = 0644
 
 var (
-	errNotFound = errors.New("not found")
-	fNotFound   = "not_found.png"
-	outData     string
-	outLogos    string
-	pathLogos   string
-	srcUrl      *url.URL
+	errNotFound          = errors.New("not found")
+	fNotFound            = "not_found.png"
+	downloadWorkersCount = runtime.NumCPU()
+	outData              *string
+	outLogos             *string
+	pathLogos            *string
+	srcUrl               *url.URL
 )
 
 type team struct {
@@ -35,31 +42,33 @@ type team struct {
 }
 
 func main() {
-	outData = os.Getenv("OUT_DATA")
-	if outData == "" {
-		log.Println("OUT_DATA is required")
+	outData = flag.String("out_data", "", "")
+	outLogos = flag.String("out_logos", "", "")
+	pathLogos = flag.String("path_logos", "", "")
+	src := flag.String("src", "", "")
+	flag.Parse()
+
+	if outData == nil {
+		log.Println("out_data is required")
 		return
 	}
 
-	outLogos = os.Getenv("OUT_LOGOS")
-	if outLogos == "" {
-		log.Println("OUT_LOGOS is required")
+	if outLogos == nil {
+		log.Println("out_logos is required")
 		return
 	}
 
-	pathLogos = os.Getenv("PATH_LOGOS")
-	if outLogos == "" {
-		log.Println("PATH_LOGOS is required")
+	if pathLogos == nil {
+		log.Println("path_logos is required")
 		return
 	}
 
-	src := os.Getenv("SRC")
-	if src == "" {
-		log.Println("SRC is required")
+	if src == nil {
+		log.Println("src is required")
 		return
 	}
 	var err error
-	srcUrl, err = url.Parse(src)
+	srcUrl, err = url.Parse(*src)
 	if err != nil {
 		log.Println("parse url error", err)
 	}
@@ -82,7 +91,7 @@ func main() {
 		return
 	}
 
-	if err := os.WriteFile(outData, b, perm); err != nil {
+	if err := os.WriteFile(*outData, b, perm); err != nil {
 		log.Println("write error", err)
 		return
 	}
@@ -151,25 +160,91 @@ func setIds(teams []team) []team {
 }
 
 func downloadLogos(teams []team) ([]team, error) {
-	for k, v := range teams {
-		u, err := url.Parse(v.Img)
-		if err != nil {
-			return nil, fmt.Errorf("parse url %s error: %w", v.Img, err)
+	g, ctx := errgroup.WithContext(context.Background())
+
+	tasks := make(chan team)
+	g.Go(func() error {
+		defer close(tasks)
+		for _, t := range teams {
+			select {
+			case tasks <- t:
+			case <-ctx.Done():
+				return ctx.Err()
+			}
 		}
-		b, err := get(v.Img)
-		if err == errNotFound {
-			teams[k].Img = path.Join(pathLogos, fNotFound)
-			continue
-		} else if err != nil {
-			return nil, fmt.Errorf("download logo %s error: %w", v.Img, err)
-		}
-		_, f := path.Split(u.Path)
-		if err := os.WriteFile(path.Join(outLogos, f), b, perm); err != nil {
-			return nil, fmt.Errorf("save logo %s error: %w", v.Img, err)
-		}
-		teams[k].Img = path.Join(pathLogos, f)
+		return nil
+	})
+
+	fNotFound := path.Join(*pathLogos, fNotFound)
+	processed := make(chan team)
+	for w := 0; w < downloadWorkersCount; w++ {
+		g.Go(func() error {
+			for {
+				select {
+				case t, ok := <-tasks:
+					if !ok {
+						return nil
+					}
+
+					u, err := url.Parse(t.Img)
+					if err != nil {
+						return fmt.Errorf("parse url %s error: %w", t.Img, err)
+					}
+
+					b, err := get(t.Img)
+					if err == errNotFound {
+						t.Img = fNotFound
+						processed <- t
+						continue
+					} else if err != nil {
+						return fmt.Errorf("download logo %s error: %w", t.Img, err)
+					}
+
+					_, f := path.Split(u.Path)
+					if err := os.WriteFile(path.Join(*outLogos, f), b, perm); err != nil {
+						return fmt.Errorf("save logo %s error: %w", t.Img, err)
+					}
+
+					t.Img = path.Join(*pathLogos, f)
+					processed <- t
+
+				case <-ctx.Done():
+					return ctx.Err()
+				}
+			}
+		})
 	}
-	return teams, nil
+
+	wg := &sync.WaitGroup{}
+
+	var err error
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		defer close(processed)
+		err = g.Wait()
+	}()
+
+	res := make([]team, 0, len(teams))
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for p := range processed {
+			res = append(res, p)
+		}
+	}()
+
+	wg.Wait()
+
+	if err != nil {
+		return nil, err
+	}
+
+	sort.Slice(res, func(i, j int) bool {
+		return res[i].ID < res[j].ID
+	})
+
+	return res, nil
 }
 
 func get(u string) ([]byte, error) {

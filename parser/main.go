@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,6 +14,7 @@ import (
 	"path"
 
 	"github.com/PuerkitoBio/goquery"
+	"golang.org/x/sync/errgroup"
 )
 
 const perm = 0644
@@ -151,25 +153,60 @@ func setIds(teams []team) []team {
 }
 
 func downloadLogos(teams []team) ([]team, error) {
-	for k, v := range teams {
-		u, err := url.Parse(v.Img)
-		if err != nil {
-			return nil, fmt.Errorf("parse url %s error: %w", v.Img, err)
+	res := make([]team, 0, len(teams))
+
+	src := make(chan team)
+
+	dst := make(chan team)
+	defer close(dst)
+
+	g, _ := errgroup.WithContext(context.Background())
+	g.Go(func() error {
+		defer close(src)
+		for _, v := range teams {
+			src <- v
 		}
-		b, err := get(v.Img)
-		if err == errNotFound {
-			teams[k].Img = path.Join(pathLogos, fNotFound)
-			continue
-		} else if err != nil {
-			return nil, fmt.Errorf("download logo %s error: %w", v.Img, err)
+		return nil
+	})
+
+	g.Go(func() error {
+		for v := range dst {
+			res = append(res, v)
 		}
-		_, f := path.Split(u.Path)
-		if err := os.WriteFile(path.Join(outLogos, f), b, perm); err != nil {
-			return nil, fmt.Errorf("save logo %s error: %w", v.Img, err)
-		}
-		teams[k].Img = path.Join(pathLogos, f)
+		return nil
+	})
+
+	for k := 0; k < 10; k++ {
+		g.Go(func() error {
+			for v := range src {
+				u, err := url.Parse(v.Img)
+				if err != nil {
+					return fmt.Errorf("parse url %s error: %w", v.Img, err)
+				}
+				b, err := get(v.Img)
+				if err == errNotFound {
+					v.Img = path.Join(pathLogos, fNotFound)
+					dst <- v
+					continue
+				} else if err != nil {
+					return fmt.Errorf("download logo %s error: %w", v.Img, err)
+				}
+				_, f := path.Split(u.Path)
+				if err := os.WriteFile(path.Join(outLogos, f), b, perm); err != nil {
+					return fmt.Errorf("save logo %s error: %w", v.Img, err)
+				}
+				v.Img = path.Join(pathLogos, f)
+				dst <- v
+			}
+			return nil
+		})
 	}
-	return teams, nil
+
+	if err := g.Wait(); err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }
 
 func get(u string) ([]byte, error) {

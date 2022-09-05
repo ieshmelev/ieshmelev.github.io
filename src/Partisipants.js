@@ -169,31 +169,32 @@ const Partisipants = (props) => {
   const draw = () => {
     const used = []
 
-    const trows = suffle(rows).map((trow) => {
+    const trows = suffle(rows).map((row) => {
       const teams = suffle(
-        trow.buckets
+        row.buckets
           .split(',')
+          .map((item) => Number(item))
           .reduce(
             (sum, current) =>
-              buckets.has(Number(current))
-                ? [...sum, ...buckets.get(Number(current)).teams]
+              buckets.has(current)
+                ? [...sum, ...buckets.get(current).teams]
                 : sum,
             []
           )
           .filter((team) => !used.includes(team.id))
       )
-      console.log(`draw for: ${trow.name}`)
+      console.log(`draw for: ${row.name}`)
       console.log('teams:', teams)
       if (teams.length === 0) {
         console.log('')
-        return trow
+        return row
       }
       const r = rand(0, teams.length)
       console.log(`draw: ${r}`)
       console.log('team:', teams[r])
       console.log('')
       used.push(teams[r].id)
-      return { ...trow, team: teams[r].title }
+      return { ...row, team: teams[r].title }
     })
 
     processRowsUpdate(

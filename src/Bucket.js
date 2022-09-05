@@ -12,12 +12,7 @@ const Bucket = (props) => {
   return (
     <React.Fragment>
       <Title>
-        <Rating
-          name="half-rating-read"
-          defaultValue={bucket.stars}
-          precision={0.5}
-          readOnly
-        />
+        <Rating defaultValue={bucket.stars} precision={0.5} readOnly />
       </Title>
       <Box sx={{ flexGrow: 1 }}>
         <Grid container columns={{ xs: 4, sm: 8, md: 12 }}>

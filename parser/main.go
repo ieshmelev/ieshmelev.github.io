@@ -12,6 +12,9 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"runtime"
+	"sort"
+	"sync"
 
 	"github.com/PuerkitoBio/goquery"
 	"golang.org/x/sync/errgroup"
@@ -20,12 +23,13 @@ import (
 const perm = 0644
 
 var (
-	errNotFound = errors.New("not found")
-	fNotFound   = "not_found.png"
-	outData     string
-	outLogos    string
-	pathLogos   string
-	srcUrl      *url.URL
+	errNotFound          = errors.New("not found")
+	fNotFound            = "not_found.png"
+	downloadWorkersCount = runtime.NumCPU()
+	outData              string
+	outLogos             string
+	pathLogos            string
+	srcUrl               *url.URL
 )
 
 type team struct {
@@ -153,58 +157,89 @@ func setIds(teams []team) []team {
 }
 
 func downloadLogos(teams []team) ([]team, error) {
-	res := make([]team, 0, len(teams))
+	g, ctx := errgroup.WithContext(context.Background())
 
-	src := make(chan team)
-
-	dst := make(chan team)
-	defer close(dst)
-
-	g, _ := errgroup.WithContext(context.Background())
+	tasks := make(chan team)
 	g.Go(func() error {
-		defer close(src)
-		for _, v := range teams {
-			src <- v
-		}
-		return nil
-	})
-
-	g.Go(func() error {
-		for v := range dst {
-			res = append(res, v)
-		}
-		return nil
-	})
-
-	for k := 0; k < 10; k++ {
-		g.Go(func() error {
-			for v := range src {
-				u, err := url.Parse(v.Img)
-				if err != nil {
-					return fmt.Errorf("parse url %s error: %w", v.Img, err)
-				}
-				b, err := get(v.Img)
-				if err == errNotFound {
-					v.Img = path.Join(pathLogos, fNotFound)
-					dst <- v
-					continue
-				} else if err != nil {
-					return fmt.Errorf("download logo %s error: %w", v.Img, err)
-				}
-				_, f := path.Split(u.Path)
-				if err := os.WriteFile(path.Join(outLogos, f), b, perm); err != nil {
-					return fmt.Errorf("save logo %s error: %w", v.Img, err)
-				}
-				v.Img = path.Join(pathLogos, f)
-				dst <- v
+		defer close(tasks)
+		for _, t := range teams {
+			select {
+			case tasks <- t:
+			case <-ctx.Done():
+				return ctx.Err()
 			}
-			return nil
+		}
+		return nil
+	})
+
+	fNotFound := path.Join(pathLogos, fNotFound)
+	processed := make(chan team)
+	for w := 0; w < downloadWorkersCount; w++ {
+		g.Go(func() error {
+			for {
+				select {
+				case t, ok := <-tasks:
+					if !ok {
+						return nil
+					}
+
+					u, err := url.Parse(t.Img)
+					if err != nil {
+						return fmt.Errorf("parse url %s error: %w", t.Img, err)
+					}
+
+					b, err := get(t.Img)
+					if err == errNotFound {
+						t.Img = fNotFound
+						processed <- t
+						continue
+					} else if err != nil {
+						return fmt.Errorf("download logo %s error: %w", t.Img, err)
+					}
+
+					_, f := path.Split(u.Path)
+					if err := os.WriteFile(path.Join(outLogos, f), b, perm); err != nil {
+						return fmt.Errorf("save logo %s error: %w", t.Img, err)
+					}
+
+					t.Img = path.Join(pathLogos, f)
+					processed <- t
+
+				case <-ctx.Done():
+					return ctx.Err()
+				}
+			}
 		})
 	}
 
-	if err := g.Wait(); err != nil {
+	wg := &sync.WaitGroup{}
+
+	var err error
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		defer close(processed)
+		err = g.Wait()
+	}()
+
+	res := make([]team, 0, len(teams))
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for p := range processed {
+			res = append(res, p)
+		}
+	}()
+
+	wg.Wait()
+
+	if err != nil {
 		return nil, err
 	}
+
+	sort.Slice(res, func(i, j int) bool {
+		return res[i].ID < res[j].ID
+	})
 
 	return res, nil
 }

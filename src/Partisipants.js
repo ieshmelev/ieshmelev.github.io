@@ -56,7 +56,7 @@ EditToolbar.propTypes = {
 }
 
 const MultiSelectEditComponent = (props) => {
-  const { id, value, field, buckets } = props
+  const { id, value, field, valueOptions } = props
   const apiRef = useGridApiContext()
   const handleChange = (event) => {
     const {
@@ -72,14 +72,11 @@ const MultiSelectEditComponent = (props) => {
       onChange={handleChange}
       sx={{ width: 1 }}
     >
-      {[...buckets].map((bucket) => {
-        const [key] = bucket
-        return (
-          <MenuItem key={key.toString()} value={key.toString()}>
-            {key.toString()}
-          </MenuItem>
-        )
-      })}
+      {valueOptions.map((item) => (
+        <MenuItem key={item} value={item}>
+          {item}
+        </MenuItem>
+      ))}
     </Select>
   )
 }
@@ -88,7 +85,7 @@ MultiSelectEditComponent.propTypes = {
   id: PropTypes.number.isRequired,
   value: PropTypes.string.isRequired,
   field: PropTypes.string.isRequired,
-  buckets: PropTypes.any.isRequired
+  valueOptions: PropTypes.array.isRequired
 }
 
 const Partisipants = (props) => {
@@ -214,7 +211,13 @@ const Partisipants = (props) => {
       headerName: 'Buckets',
       editable: true,
       renderEditCell: (params) => (
-        <MultiSelectEditComponent {...params} buckets={buckets} />
+        <MultiSelectEditComponent
+          {...params}
+          valueOptions={[...buckets].map((bucket) => {
+            const [key] = bucket
+            return key.toString()
+          })}
+        />
       ),
       flex: 1
     },

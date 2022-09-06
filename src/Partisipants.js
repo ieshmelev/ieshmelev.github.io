@@ -11,13 +11,12 @@ import {
   GridRowModes,
   DataGrid,
   GridToolbarContainer,
-  GridActionsCellItem,
-  useGridApiContext
+  GridActionsCellItem
 } from '@mui/x-data-grid'
 import Box from '@mui/material/Box'
-import MenuItem from '@mui/material/MenuItem'
-import Select from '@mui/material/Select'
+import MultiSelectEditComponent from './MultiSelectEditComponent'
 import Title from './Title'
+import { rand, suffle } from './Utils'
 
 const EditToolbar = (props) => {
   const { setRows, setRowModesModel, draw } = props
@@ -53,42 +52,6 @@ EditToolbar.propTypes = {
   setRowModesModel: PropTypes.func.isRequired,
   setRows: PropTypes.func.isRequired,
   draw: PropTypes.func.isRequired
-}
-
-const MultiSelectEditComponent = (props) => {
-  const { id, value, field, buckets } = props
-  const apiRef = useGridApiContext()
-  const handleChange = (event) => {
-    const {
-      target: { value }
-    } = event
-    apiRef.current.setEditCellValue({ id, field, value: value.join() })
-  }
-
-  return (
-    <Select
-      multiple
-      value={value.split(',').filter((item) => item !== '')}
-      onChange={handleChange}
-      sx={{ width: 1 }}
-    >
-      {[...buckets].map((bucket) => {
-        const [key] = bucket
-        return (
-          <MenuItem key={key.toString()} value={key.toString()}>
-            {key.toString()}
-          </MenuItem>
-        )
-      })}
-    </Select>
-  )
-}
-
-MultiSelectEditComponent.propTypes = {
-  id: PropTypes.number.isRequired,
-  value: PropTypes.string.isRequired,
-  field: PropTypes.string.isRequired,
-  buckets: PropTypes.any.isRequired
 }
 
 const Partisipants = (props) => {
@@ -154,18 +117,6 @@ const Partisipants = (props) => {
     setRows(rows)
   }
 
-  const suffle = (data) =>
-    data
-      .map((value) => ({ value, sort: Math.random() }))
-      .sort((a, b) => a.sort - b.sort)
-      .map(({ value }) => value)
-
-  const rand = (min, max) => {
-    min = Math.ceil(min)
-    max = Math.floor(max)
-    return Math.floor(Math.random() * (max - min)) + min
-  }
-
   const draw = () => {
     const used = []
 
@@ -214,7 +165,13 @@ const Partisipants = (props) => {
       headerName: 'Buckets',
       editable: true,
       renderEditCell: (params) => (
-        <MultiSelectEditComponent {...params} buckets={buckets} />
+        <MultiSelectEditComponent
+          {...params}
+          valueOptions={[...buckets].map((bucket) => {
+            const [key] = bucket
+            return key.toString()
+          })}
+        />
       ),
       flex: 1
     },
@@ -269,7 +226,7 @@ const Partisipants = (props) => {
   ]
 
   return (
-    <React.Fragment>
+    <>
       <Title>Partisipants</Title>
       <Box
         sx={{
@@ -300,7 +257,7 @@ const Partisipants = (props) => {
           experimentalFeatures={{ newEditingApi: true }}
         />
       </Box>
-    </React.Fragment>
+    </>
   )
 }
 

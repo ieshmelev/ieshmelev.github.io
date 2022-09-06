@@ -1,16 +1,16 @@
 import * as React from 'react'
-import Title from './Title'
+import PropTypes from 'prop-types'
 import Box from '@mui/material/Box'
 import Grid from '@mui/material/Grid'
-import './Bucket.css'
 import Rating from '@mui/material/Rating'
-import PropTypes from 'prop-types'
+import Title from './Title'
+import './Bucket.css'
 
 const Bucket = (props) => {
   const { bucket } = props
 
   return (
-    <React.Fragment>
+    <>
       <Title>
         <Rating defaultValue={bucket.stars} precision={0.5} readOnly />
       </Title>
@@ -37,7 +37,7 @@ const Bucket = (props) => {
           ))}
         </Grid>
       </Box>
-    </React.Fragment>
+    </>
   )
 }
 

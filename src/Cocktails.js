@@ -13,49 +13,59 @@ const Cocktails = () => {
     ...new Set(
       cocktails.reduce((sum, current) => [...sum, ...current.ingredients], [])
     )
-  ]
-  const devices = [
+  ].sort()
+  const tools = [
     ...new Set(
-      cocktails.reduce((sum, current) => [...sum, ...current.devices], [])
+      cocktails.reduce((sum, current) => [...sum, ...current.tools], [])
     )
-  ]
+  ].sort()
 
   const [selectedIngredients, setSelectedIngredients] = React.useState(
     loadFromLS('ingredients')
   )
-  const [selectedDevices, setSelectedDevices] = React.useState(
-    loadFromLS('devices')
-  )
+  const [selectedTools, setSelectedTools] = React.useState(loadFromLS('tools'))
 
   const readyForCook = []
   const needOneMore = []
 
-  cocktails.forEach((coctail) => {
+  cocktails.forEach((cocktail) => {
     const iIngredients = selectedIngredients.filter((x) =>
-      coctail.ingredients.includes(x)
+      cocktail.ingredients.includes(x)
     )
-    const diffIngredients = coctail.ingredients.length - iIngredients.length
+    const diffIngredients = cocktail.ingredients.length - iIngredients.length
     if (diffIngredients > 1) {
       return
     }
 
-    const iDevices = selectedDevices.filter((x) => coctail.devices.includes(x))
-    const diffDevices = coctail.devices.length - iDevices.length
-    if (diffDevices > 1) {
+    const iTools = selectedTools.filter((x) => cocktail.tools.includes(x))
+    const diffTools = cocktail.tools.length - iTools.length
+    if (diffTools > 1) {
       return
     }
 
-    if (diffIngredients === 0 && diffDevices === 0) {
-      readyForCook.push(coctail)
+    if (diffIngredients === 0 && diffTools === 0) {
+      readyForCook.push(cocktail)
       return
     }
 
-    const needIngredients = coctail.ingredients.filter(
+    const needIngredients = cocktail.ingredients.filter(
       (x) => !iIngredients.includes(x)
     )
-    const needDevices = coctail.devices.filter((x) => !iDevices.includes(x))
-    needOneMore.push({ ...coctail, needIngredients, needDevices })
+    const needTools = cocktail.tools.filter((x) => !iTools.includes(x))
+    needOneMore.push({ ...cocktail, needIngredients, needTools })
   })
+
+  const compareItems = (a, b) => {
+    const nameA = a.name.toUpperCase()
+    const nameB = b.name.toUpperCase()
+    if (nameA < nameB) {
+      return -1
+    }
+    if (nameA > nameB) {
+      return 1
+    }
+    return 0
+  }
 
   return (
     <>
@@ -78,16 +88,16 @@ const Cocktails = () => {
           </Grid>
           <Grid item xs={12}>
             <Autocomplete
-              value={selectedDevices}
+              value={selectedTools}
               multiple
-              options={devices}
+              options={tools}
               sx={{ width: 1 }}
               onChange={(event, newValue) => {
-                saveToLS('devices')
-                setSelectedDevices(newValue)
+                saveToLS('tools', newValue)
+                setSelectedTools(newValue)
               }}
               renderInput={(params) => (
-                <TextField {...params} label="Devices" margin="normal" />
+                <TextField {...params} label="Tools" margin="normal" />
               )}
             />
           </Grid>
@@ -98,9 +108,9 @@ const Cocktails = () => {
         <Grid item xs={12}>
           <Title>ready for cook</Title>
           <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
-            {readyForCook.map((coctail) => (
-              <div key={coctail.name}>
-                <Link href={coctail.link}>{coctail.name}</Link>
+            {readyForCook.sort(compareItems).map((cocktail) => (
+              <div key={cocktail.name}>
+                <Link href={cocktail.link}>{cocktail.name}</Link>
               </div>
             ))}
           </Paper>
@@ -109,12 +119,12 @@ const Cocktails = () => {
 
       {needOneMore.length > 0 && (
         <Grid item xs={12}>
-          <Title>need one more ingredient or/and device</Title>
+          <Title>need one more ingredient or/and tool</Title>
           <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
-            {needOneMore.map((coctail) => (
-              <div key={coctail.name}>
-                <Link href={coctail.link}>{coctail.name}</Link> need:
-                {[...coctail.needIngredients, ...coctail.needDevices].join()}
+            {needOneMore.sort(compareItems).map((cocktail) => (
+              <div key={cocktail.name}>
+                <Link href={cocktail.link}>{cocktail.name}</Link> need:
+                {[...cocktail.needIngredients, ...cocktail.needTools].join()}
               </div>
             ))}
           </Paper>

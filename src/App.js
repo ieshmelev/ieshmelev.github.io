@@ -144,7 +144,7 @@ const App = () => {
                   <ListItemText primary="Draw" />
                 </ListItemButton>
               </Link>
-              <Link to="/coctails">
+              <Link to="/cocktails">
                 <ListItemButton>
                   <ListItemIcon>
                     <LocalBarIcon />
@@ -171,7 +171,7 @@ const App = () => {
               <Grid container spacing={3}>
                 <Routes>
                   <Route path="/" element={<Home />} />
-                  <Route path="/coctails" element={<Cocktails />} />
+                  <Route path="/cocktails" element={<Cocktails />} />
                   <Route path="/draw" element={<Draw />} />
                 </Routes>
               </Grid>

@@ -16,7 +16,7 @@ import {
 import Box from '@mui/material/Box'
 import MultiSelectEditComponent from './MultiSelectEditComponent'
 import Title from './Title'
-import { rand, suffle } from './Utils'
+import { rand, suffle, saveToLS, loadFromLS } from './Utils'
 
 const EditToolbar = (props) => {
   const { setRows, setRowModesModel, draw } = props
@@ -57,20 +57,7 @@ EditToolbar.propTypes = {
 const Partisipants = (props) => {
   const { buckets } = props
 
-  const savePartisipants = (data) => {
-    localStorage.setItem('partisipants', JSON.stringify(data))
-  }
-
-  const loadPartisipants = () => {
-    let partisipants = []
-    const lsPartisipants = localStorage.getItem('partisipants')
-    if (lsPartisipants !== null) {
-      partisipants = JSON.parse(lsPartisipants)
-    }
-    return partisipants
-  }
-
-  const [rows, setRows] = React.useState(loadPartisipants())
+  const [rows, setRows] = React.useState(loadFromLS('partisipants'))
   const [rowModesModel, setRowModesModel] = React.useState({})
 
   const handleRowEditStart = (params, event) => {
@@ -113,7 +100,7 @@ const Partisipants = (props) => {
   }
 
   const processRowsUpdate = (rows) => {
-    savePartisipants(rows)
+    saveToLS('partisipants', rows)
     setRows(rows)
   }
 

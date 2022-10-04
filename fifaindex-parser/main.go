@@ -71,6 +71,7 @@ func main() {
 	srcUrl, err = url.Parse(*src)
 	if err != nil {
 		log.Println("parse url error", err)
+		return
 	}
 
 	teams, err := parse()

@@ -9,3 +9,16 @@ export const rand = (min, max) => {
   max = Math.floor(max)
   return Math.floor(Math.random() * (max - min)) + min
 }
+
+export const saveToLS = (key, data) => {
+  localStorage.setItem(key, JSON.stringify(data))
+}
+
+export const loadFromLS = (key) => {
+  let data = []
+  const lsData = localStorage.getItem(key)
+  if (lsData !== null) {
+    data = JSON.parse(lsData)
+  }
+  return data
+}

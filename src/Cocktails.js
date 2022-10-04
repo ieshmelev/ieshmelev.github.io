@@ -55,7 +55,7 @@ const Cocktails = () => {
     needOneMore.push({ ...cocktail, needIngredients, needTools })
   })
 
-  const compareItems = (a, b) => {
+  const compareCocktails = (a, b) => {
     const nameA = a.name.toUpperCase()
     const nameB = b.name.toUpperCase()
     if (nameA < nameB) {
@@ -108,7 +108,7 @@ const Cocktails = () => {
         <Grid item xs={12}>
           <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
             <Title>есть все для приготовления</Title>
-            {readyForCook.sort(compareItems).map((cocktail) => (
+            {readyForCook.sort(compareCocktails).map((cocktail) => (
               <div key={cocktail.name}>
                 <Link href={cocktail.link} target="_blank" rel="noreferrer">
                   {cocktail.name}
@@ -123,12 +123,12 @@ const Cocktails = () => {
         <Grid item xs={12}>
           <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
             <Title>нужен еще один ингредиент и/или нужна еще одна штучка</Title>
-            {needOneMore.sort(compareItems).map((cocktail) => (
+            {needOneMore.sort(compareCocktails).map((cocktail) => (
               <div key={cocktail.name}>
                 <Link href={cocktail.link} target="_blank" rel="noreferrer">
                   {cocktail.name}
-                </Link>{' '}
-                {': '}
+                </Link>
+                {' : '}
                 {[...cocktail.needIngredients, ...cocktail.needTools].join(
                   ', '
                 )}

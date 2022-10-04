@@ -106,11 +106,13 @@ const Cocktails = () => {
 
       {readyForCook.length > 0 && (
         <Grid item xs={12}>
-          <Title>есть все для приготовления</Title>
           <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
+            <Title>есть все для приготовления</Title>
             {readyForCook.sort(compareItems).map((cocktail) => (
               <div key={cocktail.name}>
-                <Link href={cocktail.link}>{cocktail.name}</Link>
+                <Link href={cocktail.link} target="_blank" rel="noreferrer">
+                  {cocktail.name}
+                </Link>
               </div>
             ))}
           </Paper>
@@ -119,11 +121,14 @@ const Cocktails = () => {
 
       {needOneMore.length > 0 && (
         <Grid item xs={12}>
-          <Title>нужен еще один ингредиент и/или нужна еще одна штучка</Title>
           <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
+            <Title>нужен еще один ингредиент и/или нужна еще одна штучка</Title>
             {needOneMore.sort(compareItems).map((cocktail) => (
               <div key={cocktail.name}>
-                <Link href={cocktail.link}>{cocktail.name}</Link> {': '}
+                <Link href={cocktail.link} target="_blank" rel="noreferrer">
+                  {cocktail.name}
+                </Link>{' '}
+                {': '}
                 {[...cocktail.needIngredients, ...cocktail.needTools].join(
                   ', '
                 )}

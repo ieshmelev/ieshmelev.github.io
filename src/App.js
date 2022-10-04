@@ -127,7 +127,6 @@ const App = () => {
             </Toolbar>
             <Divider />
             <List component="nav">
-              {' '}
               <Link to="/">
                 <ListItemButton>
                   <ListItemIcon>

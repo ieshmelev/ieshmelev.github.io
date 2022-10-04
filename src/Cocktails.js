@@ -82,7 +82,7 @@ const Cocktails = () => {
                 setSelectedIngredients(newValue)
               }}
               renderInput={(params) => (
-                <TextField {...params} label="Ingredients" margin="normal" />
+                <TextField {...params} label="ингредиенты" margin="normal" />
               )}
             />
           </Grid>
@@ -97,7 +97,7 @@ const Cocktails = () => {
                 setSelectedTools(newValue)
               }}
               renderInput={(params) => (
-                <TextField {...params} label="Tools" margin="normal" />
+                <TextField {...params} label="штучки" margin="normal" />
               )}
             />
           </Grid>
@@ -106,7 +106,7 @@ const Cocktails = () => {
 
       {readyForCook.length > 0 && (
         <Grid item xs={12}>
-          <Title>ready for cook</Title>
+          <Title>есть все для приготовления</Title>
           <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
             {readyForCook.sort(compareItems).map((cocktail) => (
               <div key={cocktail.name}>
@@ -119,12 +119,14 @@ const Cocktails = () => {
 
       {needOneMore.length > 0 && (
         <Grid item xs={12}>
-          <Title>need one more ingredient or/and tool</Title>
+          <Title>нужен еще один ингредиент и/или нужна еще одна штучка</Title>
           <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
             {needOneMore.sort(compareItems).map((cocktail) => (
               <div key={cocktail.name}>
-                <Link href={cocktail.link}>{cocktail.name}</Link> need:
-                {[...cocktail.needIngredients, ...cocktail.needTools].join()}
+                <Link href={cocktail.link}>{cocktail.name}</Link> {': '}
+                {[...cocktail.needIngredients, ...cocktail.needTools].join(
+                  ', '
+                )}
               </div>
             ))}
           </Paper>
